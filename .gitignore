@@ -1,0 +1,37 @@
+# 密钥与本地环境
+.env
+.env.*
+!.env.example
+
+# Python 缓存与构建产物
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# IDE 与操作系统本地文件
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 运行期日志与本地数据
+logs/
+*.log
+data/
+uploads/
+*.sqlite3
+*.db
+mysql_data/
+milvus_data/
+redis_data/

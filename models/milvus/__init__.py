@@ -1,0 +1,27 @@
+from models.milvus.knowledge_chunks import (
+    CHUNK_ID_FIELD,
+    COLLECTION_NAME,
+    DATABASE_NAME,
+    DOCUMENT_ID_FIELD,
+    EMBEDDING_DIMENSION,
+    EMBEDDING_FIELD,
+    INDEX_TYPE,
+    METADATA_FIELD,
+    METRIC_TYPE,
+    PAGE_NO_FIELD,
+    schema,
+)
+
+__all__ = [
+    "CHUNK_ID_FIELD",
+    "COLLECTION_NAME",
+    "DATABASE_NAME",
+    "DOCUMENT_ID_FIELD",
+    "EMBEDDING_DIMENSION",
+    "EMBEDDING_FIELD",
+    "INDEX_TYPE",
+    "METADATA_FIELD",
+    "METRIC_TYPE",
+    "PAGE_NO_FIELD",
+    "schema",
+]
