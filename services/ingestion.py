@@ -11,13 +11,18 @@ from typing import Any
 from bs4 import BeautifulSoup
 from docx import Document
 from pypdf import PdfReader
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from crud.mysql.chunks import create_chunks, hard_delete_chunks_by_document
+from models.mysql import Document
+from schemas.mysql import ChunkCreate, DocumentStatus
 
 
 SUPPORTED_FILE_TYPES = ["pdf", "docx", "md", "markdown", "html", "htm", "txt"]
 SUPPORTED_EXTENSIONS = {f".{extension}" for extension in SUPPORTED_FILE_TYPES}
 _TEXT_ENCODINGS = ("utf-8-sig", "gb18030", "utf-16", "latin-1")
 
-
+# 文档上传，分析格式，清洗数据
 def _decode_text(data: bytes) -> str:
     for encoding in _TEXT_ENCODINGS:
         try:
@@ -32,7 +37,7 @@ def _normalize_text(text: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 
-def extract_text_from_file(file_name: str, data: bytes) -> str:
+def extract_text(file_name: str, data: bytes) -> str:
     """根据文件扩展名从上传文件字节流中提取可检索文本。"""
     extension = Path(file_name).suffix.lower()
     if extension not in SUPPORTED_EXTENSIONS:
@@ -65,6 +70,7 @@ def extract_text_from_file(file_name: str, data: bytes) -> str:
     return _normalize_text(text)
 
 
+# 分割文本
 def split_text(text: str, chunk_size: int = 500, chunk_overlap: int = 0) -> list[str]:
     """把长文本按语义边界切分，供 embedding 和 Milvus 入库使用。"""
     from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -76,83 +82,96 @@ def split_text(text: str, chunk_size: int = 500, chunk_overlap: int = 0) -> list
     )
     return splitter.split_text(text)
 
-
-def ingest_uploaded_file(
+# 上传文件入库：MySQL chunks 先拿到自增 ID，Milvus 再使用同一 ID。
+async def ingest_uploaded_file(
+    db: AsyncSession,
     file_name: str,
     data: bytes,
     document_id: int,
+    *,
+    replace_existing: bool = False,
     page_no: int = 0,
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """解析上传文件并写入 Milvus，返回向量入库结果。"""
+    """解析上传文件并同时写入 MySQL 与 Milvus，返回向量入库结果。"""
     from dotenv import load_dotenv
     from sentence_transformers import SentenceTransformer
 
-    from crud.milvus.knowledge_chunks import replace_document_chunks
+    from crud.milvus.knowledge_chunks import (
+        delete_document_chunks,
+        insert_knowledge_chunks,
+    )
+
+    document = await db.get(Document, document_id)
+    if document is None:
+        raise ValueError("Document not found")
 
     load_dotenv(override=True)
-    model_path = os.getenv("EMBEDDING_MODEL_PATH") or os.getenv("EMBEDDING_MODEL_NAME")
+    model_path = os.getenv("EMBEDDING_MODEL_PATH")
     if not model_path:
-        raise ValueError("缺少 EMBEDDING_MODEL_PATH 或 EMBEDDING_MODEL_NAME 配置")
+        raise ValueError("缺少 EMBEDDING_MODEL_PATH 配置")
     embedding_model = SentenceTransformer(model_path)
 
-    text = extract_text_from_file(file_name, data)
+    text = extract_text(file_name, data)
     chunks = split_text(text)
     if not chunks:
         raise ValueError("文件未提取到有效文本")
 
     embeddings = embedding_model.encode(chunks)
     extension = Path(file_name).suffix.lower().lstrip(".")
-    chunk_ids = [
-        document_id * 1_000_000_000 + index
-        for index in range(1, len(chunks) + 1)
-    ]
     page_nos = [page_no] * len(chunks)
     chunk_metadata = [
         {**(metadata or {}), "file_name": file_name, "source_type": extension}
         for _ in chunks
     ]
+    chunk_creates = [
+        ChunkCreate(
+            document_id=document_id,
+            content=chunk,
+            page_no=page_no,
+            token_count=max(1, len(chunk.split())),
+            metadata=chunk_metadata[index],
+        )
+        for index, chunk in enumerate(chunks)
+    ]
 
-    return replace_document_chunks(
-        chunk_id=chunk_ids,
-        document_id=document_id,
-        embeddings=embeddings.tolist(),
-        page_no=page_nos,
-        metadata=chunk_metadata,
-    )
+    try:
+        if replace_existing:
+            await hard_delete_chunks_by_document(db, document_id)
+            delete_document_chunks(document_id)
 
+        db_chunks = await create_chunks(db, chunk_creates)
+        chunk_ids = [chunk.id for chunk in db_chunks]
 
-def main() -> None:
-    """保留原有命令行入口：默认入库项目根目录下的 knowledge.txt。"""
-    from dotenv import load_dotenv
-    from sentence_transformers import SentenceTransformer
+        result = insert_knowledge_chunks(
+            chunk_id=chunk_ids,
+            document_id=document_id,
+            embeddings=embeddings.tolist(),
+            page_no=page_nos,
+            metadata=chunk_metadata,
+        )
 
-    from crud.milvus.knowledge_chunks import replace_document_chunks
+        document.status = DocumentStatus.READY.value
+        if replace_existing:
+            document.version += 1
+        document.error_message = None
+        await db.commit()
+        # 提交后刷新服务端生成的 updated_at，避免响应序列化时触发异步懒加载。
+        await db.refresh(document)
+        return result
+    except Exception as exc:
+        await db.rollback()
+        try:
+            delete_document_chunks(document_id)
+        except Exception:
+            pass
+        document = await db.get(Document, document_id)
+        if document is not None:
+            document.status = DocumentStatus.FAILED.value
+            document.error_message = str(exc)
+            await db.commit()
+            await db.refresh(document)
+        raise
 
-    load_dotenv(override=True)
-    model_path = os.getenv("EMBEDDING_MODEL_PATH") or os.getenv("EMBEDDING_MODEL_NAME")
-    if not model_path:
-        raise ValueError("缺少 EMBEDDING_MODEL_PATH 或 EMBEDDING_MODEL_NAME 配置")
-
-    text_path = Path(__file__).resolve().parent.parent / "knowledge.txt"
-    text = extract_text_from_file(text_path.name, text_path.read_bytes())
-    chunks = split_text(text)
-    embeddings = SentenceTransformer(model_path).encode(chunks)
-    chunk_ids = [1_000_000_000 + index for index in range(1, len(chunks) + 1)]
-    page_nos = [0] * len(chunks)
-    metadata = [{"file_name": text_path.name, "source_type": "txt"} for _ in chunks]
-
-    result = replace_document_chunks(
-        chunk_id=chunk_ids,
-        document_id=1,
-        embeddings=embeddings.tolist(),
-        page_no=page_nos,
-        metadata=metadata,
-    )
-    print(result)
-
-
-if __name__ == "__main__":
-    main()
 
 

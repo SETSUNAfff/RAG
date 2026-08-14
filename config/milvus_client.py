@@ -1,6 +1,8 @@
-from pymilvus import MilvusClient
-from dotenv import load_dotenv
+import logging
 import os
+
+from dotenv import load_dotenv
+from pymilvus import MilvusClient
 
 from models.milvus.knowledge_chunks import (
     COLLECTION_NAME,
@@ -12,19 +14,30 @@ from models.milvus.knowledge_chunks import (
 )
 
 load_dotenv(override=True)
-MILVUS_HOST = os.getenv('MILVUS_HOST')
+MILVUS_HOST = os.getenv("MILVUS_HOST", "127.0.0.1")
+logger = logging.getLogger(__name__)
 
-client = MilvusClient(host=MILVUS_HOST)
+# Milvus 客户端使用惰性单例，导入模块时不会连接外部服务。
+_client: MilvusClient | None = None
 
-# 连接milvus数据库，创建集合
-def create_collection(database_name:str,collection_name:str):
-    if database_name not in client.list_databases():
-        client.create_database(database_name)
-        print(f'[{database_name}]数据库已创建')
-    client.use_database(database_name)
-    print(f"已切换至[{database_name}]数据库")
 
-    if collection_name not in client.list_collections():
+def get_milvus_client() -> MilvusClient:
+    # 首次使用时创建客户端，后续复用同一个实例。
+    global _client
+    if _client is None:
+        _client = MilvusClient(host=MILVUS_HOST)
+    return _client
+
+
+def init_milvus() -> None:
+    """Create the RAG database and collection when they are missing."""
+    client = get_milvus_client()
+    if DATABASE_NAME not in client.list_databases():
+        client.create_database(DATABASE_NAME)
+        logger.info("Created Milvus database %s", DATABASE_NAME)
+    client.use_database(DATABASE_NAME)
+
+    if COLLECTION_NAME not in client.list_collections():
         index_params = client.prepare_index_params()
         index_params.add_index(
             field_name=EMBEDDING_FIELD,
@@ -32,14 +45,10 @@ def create_collection(database_name:str,collection_name:str):
             metric_type=METRIC_TYPE,
         )
         client.create_collection(
-            collection_name=collection_name,
+            collection_name=COLLECTION_NAME,
             schema=collection_schema,
             index_params=index_params,
         )
-        print(f'[{collection_name}]表已创建')
-        show_collections = client.list_collections()
-        print(show_collections)
+        logger.info("Created Milvus collection %s", COLLECTION_NAME)
     else:
-        print(f'{collection_name}表已存在')
-
-create_collection(DATABASE_NAME, COLLECTION_NAME)
+        logger.info("Milvus collection %s already exists", COLLECTION_NAME)

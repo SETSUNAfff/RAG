@@ -1,6 +1,6 @@
 import streamlit as st
 
-from services.ingestion import SUPPORTED_FILE_TYPES, extract_text_from_file
+from services.ingestion import SUPPORTED_FILE_TYPES, extract_text
 
 
 st.title("知识库更新服务")
@@ -19,7 +19,7 @@ if uploaded_file is not None:
     st.write(f"文件类型: {file_type}，文件大小：{file_size:.2f}KB")
 
     try:
-        text = extract_text_from_file(file_name, uploaded_file.getvalue())
+        text = extract_text(file_name, uploaded_file.getvalue())
         st.text_area("提取文本", text, height=400)
     except Exception as exc:
         st.error(f"文件解析失败：{exc}")
