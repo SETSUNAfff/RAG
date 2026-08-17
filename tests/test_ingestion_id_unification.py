@@ -41,11 +41,10 @@ async def _test_ingestion_uses_mysql_chunk_ids() -> None:
     with (
         patch.object(ingestion, "extract_text", return_value="first\n\nsecond"),
         patch.object(ingestion, "split_text", return_value=["first", "second"]),
-        patch.dict("os.environ", {"EMBEDDING_MODEL_PATH": "fake-model"}),
-        patch("dotenv.load_dotenv", return_value=None),
-        patch(
-            "sentence_transformers.SentenceTransformer",
-            _FakeEmbeddingModel,
+        patch.object(
+            ingestion,
+            "get_embedding_model",
+            return_value=_FakeEmbeddingModel("fake-model"),
         ),
         patch.object(
             ingestion,
@@ -93,11 +92,10 @@ async def _test_reindex_hard_deletes_old_mysql_and_milvus_chunks() -> None:
     with (
         patch.object(ingestion, "extract_text", return_value="new content"),
         patch.object(ingestion, "split_text", return_value=["new content"]),
-        patch.dict("os.environ", {"EMBEDDING_MODEL_PATH": "fake-model"}),
-        patch("dotenv.load_dotenv", return_value=None),
-        patch(
-            "sentence_transformers.SentenceTransformer",
-            _FakeEmbeddingModel,
+        patch.object(
+            ingestion,
+            "get_embedding_model",
+            return_value=_FakeEmbeddingModel("fake-model"),
         ),
         patch.object(
             ingestion,
@@ -152,11 +150,10 @@ async def _test_ingestion_marks_document_failed_and_compensates_milvus() -> None
     with (
         patch.object(ingestion, "extract_text", return_value="content"),
         patch.object(ingestion, "split_text", return_value=["content"]),
-        patch.dict("os.environ", {"EMBEDDING_MODEL_PATH": "fake-model"}),
-        patch("dotenv.load_dotenv", return_value=None),
-        patch(
-            "sentence_transformers.SentenceTransformer",
-            _FakeEmbeddingModel,
+        patch.object(
+            ingestion,
+            "get_embedding_model",
+            return_value=_FakeEmbeddingModel("fake-model"),
         ),
         patch.object(
             ingestion,

@@ -11,10 +11,10 @@ def test_health() -> None:
     assert response.json() == {"status": "ok"}
 
 
-def test_chat_placeholder() -> None:
+def test_chat_route_validates_request() -> None:
     client = TestClient(app)
-    response = client.post("/api/v1/chat")
-    assert response.status_code == 501
+    response = client.post("/api/v1/chat", json={})
+    assert response.status_code == 422
 
 
 def test_chunk_routes_are_removed() -> None:

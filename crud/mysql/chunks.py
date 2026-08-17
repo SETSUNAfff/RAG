@@ -2,7 +2,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crud.mysql.common import fetch_page
-from models.mysql import Chunk
+from models.mysql import Chunk, Document
 from schemas.mysql import ChunkCreate, ChunkUpdate
 
 def _orm_values(data: ChunkCreate | ChunkUpdate) -> dict:
@@ -49,6 +49,21 @@ async def list_chunks(
     if is_active is not None:
         statement = statement.where(Chunk.is_active == is_active)
     return await fetch_page(db, statement, page, page_size)
+
+
+async def get_chunk_details_by_ids(
+    db: AsyncSession,
+    chunk_ids: list[int],
+) -> list[tuple[Chunk, str]]:
+    """Return active chunk rows joined with their document title."""
+    if not chunk_ids:
+        return []
+    statement = (
+        select(Chunk, Document.title)
+        .join(Document, Document.id == Chunk.document_id)
+        .where(Chunk.id.in_(chunk_ids), Chunk.is_active.is_(True))
+    )
+    return list((await db.execute(statement)).all())
 
 
 async def update_chunk(

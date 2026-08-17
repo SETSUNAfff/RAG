@@ -2,6 +2,13 @@ from threading import Lock
 from typing import Any
 
 from config.milvus_client import COLLECTION_NAME, get_milvus_client, init_milvus
+from models.milvus.knowledge_chunks import (
+    CHUNK_ID_FIELD,
+    DOCUMENT_ID_FIELD,
+    METADATA_FIELD,
+    METRIC_TYPE,
+    PAGE_NO_FIELD,
+)
 
 _initialized = False
 _initialization_lock = Lock()
@@ -55,6 +62,48 @@ def insert_knowledge_chunks(
     ]
 
     return client.insert(collection_name=COLLECTION_NAME, data=rows)
+
+
+def search_knowledge_chunks(
+    query_embeddings: list[list[float]],
+    top_k: int = 10,
+    *,
+    document_id: int | None = None,
+) -> list[dict[str, Any]]:
+    """Search Milvus by embedding and return scalar chunk metadata."""
+    _ensure_milvus()
+    client = get_milvus_client()
+    search_filter = (
+        f"{DOCUMENT_ID_FIELD} == {document_id}"
+        if document_id is not None
+        else ""
+    )
+    results = client.search(
+        collection_name=COLLECTION_NAME,
+        data=query_embeddings,
+        limit=top_k,
+        output_fields=[
+            CHUNK_ID_FIELD,
+            DOCUMENT_ID_FIELD,
+            PAGE_NO_FIELD,
+            METADATA_FIELD,
+        ],
+        search_params={"metric_type": METRIC_TYPE, "params": {}},
+        filter=search_filter,
+    )
+    hits = results[0] if results else []
+    parsed: list[dict[str, Any]] = []
+    for hit in hits:
+        parsed.append(
+            {
+                "chunk_id": hit.get(CHUNK_ID_FIELD, hit.get("id")),
+                "document_id": hit.get(DOCUMENT_ID_FIELD),
+                "page_no": hit.get(PAGE_NO_FIELD),
+                "metadata": hit.get(METADATA_FIELD) or {},
+                "score": hit.get("distance", 0.0),
+            }
+        )
+    return parsed
 
 
 def delete_knowledge_chunk(chunk_id: int) -> dict[str, int]:

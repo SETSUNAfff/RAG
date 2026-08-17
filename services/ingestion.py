@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 from io import BytesIO
 from pathlib import Path
@@ -14,8 +13,10 @@ from pypdf import PdfReader
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crud.mysql.chunks import create_chunks, hard_delete_chunks_by_document
+from crud.mysql.bm25 import invalidate_bm25_index
 from models.mysql import Document
 from schemas.mysql import ChunkCreate, DocumentStatus
+from services.embeddings import get_embedding_model
 
 
 SUPPORTED_FILE_TYPES = ["pdf", "docx", "md", "markdown", "html", "htm", "txt"]
@@ -94,9 +95,6 @@ async def ingest_uploaded_file(
     metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """解析上传文件并同时写入 MySQL 与 Milvus，返回向量入库结果。"""
-    from dotenv import load_dotenv
-    from sentence_transformers import SentenceTransformer
-
     from crud.milvus.knowledge_chunks import (
         delete_document_chunks,
         insert_knowledge_chunks,
@@ -106,11 +104,7 @@ async def ingest_uploaded_file(
     if document is None:
         raise ValueError("Document not found")
 
-    load_dotenv(override=True)
-    model_path = os.getenv("EMBEDDING_MODEL_PATH")
-    if not model_path:
-        raise ValueError("缺少 EMBEDDING_MODEL_PATH 配置")
-    embedding_model = SentenceTransformer(model_path)
+    embedding_model = get_embedding_model()
 
     text = extract_text(file_name, data)
     chunks = split_text(text)
@@ -158,6 +152,7 @@ async def ingest_uploaded_file(
         await db.commit()
         # 提交后刷新服务端生成的 updated_at，避免响应序列化时触发异步懒加载。
         await db.refresh(document)
+        invalidate_bm25_index()
         return result
     except Exception as exc:
         await db.rollback()
@@ -172,6 +167,3 @@ async def ingest_uploaded_file(
             await db.commit()
             await db.refresh(document)
         raise
-
-
-

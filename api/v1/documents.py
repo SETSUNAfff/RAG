@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.mysql_engine import get_db
 from crud.milvus import delete_document_chunks
+from crud.mysql.bm25 import invalidate_bm25_index
 from crud.mysql import (
     create_document,
     delete_document,
@@ -205,4 +206,5 @@ async def delete_existing_document(
             detail=f"Milvus cleanup failed: {exc}",
         ) from exc
     await delete_document(db, document_id)
+    invalidate_bm25_index()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
