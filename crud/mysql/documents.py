@@ -27,6 +27,7 @@ async def list_documents(
     *,
     status: DocumentStatus | str | None = None,
     source_type: SourceType | str | None = None,
+    keyword: str | None = None,
     page: int = 1,
     page_size: int = 20,
 ) -> tuple[list[Document], int]:
@@ -35,6 +36,8 @@ async def list_documents(
         statement = statement.where(Document.status == status)
     if source_type is not None:
         statement = statement.where(Document.source_type == source_type)
+    if keyword:
+        statement = statement.where(Document.title.ilike(f"%{keyword}%"))
     return await fetch_page(db, statement, page, page_size)
 
 

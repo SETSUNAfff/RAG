@@ -15,6 +15,7 @@ class Citation(BaseModel):
     document_id: int
     title: str | None = None
     page_no: int | None = None
+    content: str | None = None
 
 
 class ChatRequest(BaseModel):
@@ -22,6 +23,7 @@ class ChatRequest(BaseModel):
     user_id: str = "anonymous"
     question: str = Field(min_length=1)
     history: list[ChatHistoryMessage] = []
+    source_ids: list[int] | None = None
 
 
 class ChatResponse(BaseModel):

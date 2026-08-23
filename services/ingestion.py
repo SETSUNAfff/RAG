@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 from io import BytesIO
 from pathlib import Path
@@ -16,7 +17,9 @@ from crud.mysql.chunks import create_chunks, hard_delete_chunks_by_document
 from crud.mysql.bm25 import invalidate_bm25_index
 from models.mysql import Document
 from schemas.mysql import ChunkCreate, DocumentStatus
+from services.cache import invalidate_search_cache
 from services.embeddings import get_embedding_model
+from services.locks import ingestion_lock
 
 
 SUPPORTED_FILE_TYPES = ["pdf", "docx", "md", "markdown", "html", "htm", "txt"]
@@ -79,7 +82,7 @@ def split_text(text: str, chunk_size: int = 500, chunk_overlap: int = 0) -> list
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
-        separators=["===========", "\n\n", "\n", "。", "！", "?", " ", ""],
+        separators=["\n\n", "\n", "。", "！", "?", " ", ""],
     )
     return splitter.split_text(text)
 
@@ -104,14 +107,14 @@ async def ingest_uploaded_file(
     if document is None:
         raise ValueError("Document not found")
 
-    embedding_model = get_embedding_model()
+    embedding_model = await asyncio.to_thread(get_embedding_model)
 
     text = extract_text(file_name, data)
     chunks = split_text(text)
     if not chunks:
         raise ValueError("文件未提取到有效文本")
 
-    embeddings = embedding_model.encode(chunks)
+    embeddings = await asyncio.to_thread(embedding_model.encode, chunks)
     extension = Path(file_name).suffix.lower().lstrip(".")
     page_nos = [page_no] * len(chunks)
     chunk_metadata = [
@@ -129,41 +132,45 @@ async def ingest_uploaded_file(
         for index, chunk in enumerate(chunks)
     ]
 
-    try:
-        if replace_existing:
-            await hard_delete_chunks_by_document(db, document_id)
-            delete_document_chunks(document_id)
-
-        db_chunks = await create_chunks(db, chunk_creates)
-        chunk_ids = [chunk.id for chunk in db_chunks]
-
-        result = insert_knowledge_chunks(
-            chunk_id=chunk_ids,
-            document_id=document_id,
-            embeddings=embeddings.tolist(),
-            page_no=page_nos,
-            metadata=chunk_metadata,
-        )
-
-        document.status = DocumentStatus.READY.value
-        if replace_existing:
-            document.version += 1
-        document.error_message = None
-        await db.commit()
-        # 提交后刷新服务端生成的 updated_at，避免响应序列化时触发异步懒加载。
-        await db.refresh(document)
-        invalidate_bm25_index()
-        return result
-    except Exception as exc:
-        await db.rollback()
+    async with ingestion_lock:
         try:
-            delete_document_chunks(document_id)
-        except Exception:
-            pass
-        document = await db.get(Document, document_id)
-        if document is not None:
-            document.status = DocumentStatus.FAILED.value
-            document.error_message = str(exc)
+            if replace_existing:
+                await hard_delete_chunks_by_document(db, document_id)
+                await asyncio.to_thread(delete_document_chunks, document_id)
+
+            db_chunks = await create_chunks(db, chunk_creates)
+            chunk_ids = [chunk.id for chunk in db_chunks]
+
+            result = await asyncio.to_thread(
+                insert_knowledge_chunks,
+                chunk_id=chunk_ids,
+                document_id=document_id,
+                embeddings=embeddings.tolist(),
+                page_no=page_nos,
+                metadata=chunk_metadata,
+            )
+
+            document.status = DocumentStatus.READY.value
+            if replace_existing:
+                document.version += 1
+            document.error_message = None
             await db.commit()
+            # 提交后刷新服务端生成的 updated_at，避免响应序列化时触发异步懒加载。
             await db.refresh(document)
-        raise
+            invalidate_bm25_index()
+            # 文档内容变更后清空 Redis 检索缓存，避免命中旧向量/BM25 结果。
+            await invalidate_search_cache()
+            return result
+        except Exception as exc:
+            await db.rollback()
+            try:
+                await asyncio.to_thread(delete_document_chunks, document_id)
+            except Exception:
+                pass
+            document = await db.get(Document, document_id)
+            if document is not None:
+                document.status = DocumentStatus.FAILED.value
+                document.error_message = str(exc)
+                await db.commit()
+                await db.refresh(document)
+            raise

@@ -13,12 +13,15 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.mysql_engine import get_db
+from pydantic import BaseModel
 from crud.milvus import delete_document_chunks
 from crud.mysql.bm25 import invalidate_bm25_index
+from services.cache import invalidate_search_cache
 from crud.mysql import (
     create_document,
     delete_document,
     get_document,
+    get_document_full_content,
     list_chunks,
     list_documents,
     update_document,
@@ -38,6 +41,10 @@ from services.ingestion import SUPPORTED_EXTENSIONS, ingest_uploaded_file
 router = APIRouter(prefix="/documents")
 
 
+class BatchDeleteRequest(BaseModel):
+    ids: list[int]
+
+
 def _source_type_from_file_name(file_name: str) -> SourceType:
     extension = Path(file_name).suffix.lower().lstrip(".")
     try:
@@ -51,6 +58,7 @@ async def read_documents(
     db: AsyncSession = Depends(get_db),
     document_status: DocumentStatus | None = Query(default=None, alias="status"),
     source_type: SourceType | None = Query(default=None),
+    keyword: str | None = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> Page[DocumentRead]:
@@ -58,6 +66,7 @@ async def read_documents(
         db,
         status=document_status,
         source_type=source_type,
+        keyword=keyword,
         page=page,
         page_size=page_size,
     )
@@ -207,4 +216,38 @@ async def delete_existing_document(
         ) from exc
     await delete_document(db, document_id)
     invalidate_bm25_index()
+    # 删除文档后清空 Redis 检索缓存，避免返回已删除内容的检索结果。
+    await invalidate_search_cache()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/batch-delete", status_code=status.HTTP_204_NO_CONTENT)
+async def batch_delete_documents(
+    data: BatchDeleteRequest,
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    for document_id in data.ids:
+        if await get_document(db, document_id) is None:
+            continue
+        try:
+            delete_document_chunks(document_id)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Milvus cleanup failed for document {document_id}: {exc}",
+            ) from exc
+        await delete_document(db, document_id)
+    invalidate_bm25_index()
+    await invalidate_search_cache()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/{document_id}/content")
+async def read_document_content(
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    if await get_document(db, document_id) is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    content = await get_document_full_content(db, document_id)
+    return {"id": document_id, "content": content}

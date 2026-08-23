@@ -95,3 +95,25 @@ async def hard_delete_chunks_by_document(
 ) -> None:
     """Delete all chunks for a document inside the caller's transaction."""
     await db.execute(delete(Chunk).where(Chunk.document_id == document_id))
+
+
+async def get_document_full_content(
+    db: AsyncSession,
+    document_id: int,
+) -> str:
+    """Concatenate all active chunk content for a document, in chunk id order."""
+    statement = (
+        select(Chunk.content)
+        .where(Chunk.document_id == document_id, Chunk.is_active.is_(True))
+        .order_by(Chunk.id.asc())
+    )
+    rows = (await db.execute(statement)).scalars().all()
+    return "".join(rows)
+
+
+async def list_all_chunk_refs(
+    db: AsyncSession,
+) -> list[tuple[int, int, bool]]:
+    """Return (chunk_id, document_id, is_active) for all chunks."""
+    statement = select(Chunk.id, Chunk.document_id, Chunk.is_active)
+    return list((await db.execute(statement)).all())

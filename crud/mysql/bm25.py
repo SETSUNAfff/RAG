@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import threading
 from dataclasses import dataclass
 from typing import Any
@@ -49,39 +50,43 @@ def tokenize(text: str) -> list[str]:
     ]
 
 
+def _build_index(rows) -> tuple[BM25Okapi, list[BM25Chunk]]:
+    chunks = [
+        BM25Chunk(
+            chunk_id=chunk.id,
+            document_id=chunk.document_id,
+            title=title,
+            page_no=chunk.page_no,
+            content=chunk.content,
+            metadata=chunk.meta,
+        )
+        for chunk, title in rows
+    ]
+    return (
+        BM25Okapi([tokenize(chunk.content) for chunk in chunks]),
+        chunks,
+    )
+
+
 async def _ensure_index(db: AsyncSession) -> tuple[BM25Okapi, list[BM25Chunk]]:
     global _index
     # 索引已存在时直接复用，避免每次查询都全表加载 chunks。
     if _index is not None:
         return _index
 
+    rows = (
+        await db.execute(
+            select(Chunk, Document.title)
+            .join(Document, Document.id == Chunk.document_id)
+            .where(Chunk.is_active.is_(True))
+            .order_by(Chunk.id.asc())
+        )
+    ).all()
+    built = await asyncio.to_thread(_build_index, rows)
+
     with _lock:
         if _index is None:
-            # 只索引 active chunks，并带出文档标题，供引用结果展示。
-            rows = (
-                await db.execute(
-                    select(Chunk, Document.title)
-                    .join(Document, Document.id == Chunk.document_id)
-                    .where(Chunk.is_active.is_(True))
-                    .order_by(Chunk.id.asc())
-                )
-            ).all()
-            chunks = [
-                BM25Chunk(
-                    chunk_id=chunk.id,
-                    document_id=chunk.document_id,
-                    title=title,
-                    page_no=chunk.page_no,
-                    content=chunk.content,
-                    metadata=chunk.meta,
-                )
-                for chunk, title in rows
-            ]
-            # rank_bm25 接收分词后的语料，BM25Okapi 会预先统计文档频率和 IDF。
-            _index = (
-                BM25Okapi([tokenize(chunk.content) for chunk in chunks]),
-                chunks,
-            )
+            _index = built
     return _index
 
 
@@ -89,6 +94,8 @@ async def bm25_search(
     db: AsyncSession,
     query: str,
     top_n: int = 10,
+    *,
+    document_ids: list[int] | None = None,
 ) -> list[BM25Hit]:
     bm25, chunks = await _ensure_index(db)
     if not chunks:
@@ -100,8 +107,18 @@ async def bm25_search(
         return []
 
     # get_scores 会为每个 chunk 计算一次 BM25 分数，这里按分数从高到低排序。
-    scores = bm25.get_scores(query_tokens)
-    ranked = sorted(zip(chunks, scores), key=lambda item: item[1], reverse=True)
+    scores = await asyncio.to_thread(bm25.get_scores, query_tokens)
+    # 可选：按 document_ids 过滤候选 chunk，再在全量分数中取对应分。
+    if document_ids is not None:
+        score_map = {chunk.chunk_id: score for chunk, score in zip(chunks, scores)}
+        candidates = [c for c in chunks if c.document_id in document_ids]
+        ranked = sorted(
+            ((chunk, score_map.get(chunk.chunk_id, 0.0)) for chunk in candidates),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+    else:
+        ranked = sorted(zip(chunks, scores), key=lambda item: item[1], reverse=True)
     hits: list[BM25Hit] = []
     for chunk, score in ranked:
         # 得分为 0 表示查询词在该 chunk 中完全没有命中，无需返回。

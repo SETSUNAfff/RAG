@@ -11,6 +11,7 @@ from crud.mysql import (
 )
 from schemas.common import Page
 from schemas.mysql import ConversationCreate, ConversationRead, ConversationUpdate
+from services.cache import invalidate_conversation_history
 
 # 会话 CRUD 路由；消息记录通过 /messages 单独管理。
 router = APIRouter(prefix="/conversations")
@@ -71,4 +72,6 @@ async def delete_existing_conversation(
     if await get_conversation(db, conversation_id) is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     await delete_conversation(db, conversation_id)
+    # 删除会话后同步清空 Redis 历史缓存，避免残留 key。
+    await invalidate_conversation_history(conversation_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

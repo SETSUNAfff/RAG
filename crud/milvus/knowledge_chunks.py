@@ -69,15 +69,18 @@ def search_knowledge_chunks(
     top_k: int = 10,
     *,
     document_id: int | None = None,
+    document_ids: list[int] | None = None,
 ) -> list[dict[str, Any]]:
     """Search Milvus by embedding and return scalar chunk metadata."""
     _ensure_milvus()
     client = get_milvus_client()
-    search_filter = (
-        f"{DOCUMENT_ID_FIELD} == {document_id}"
-        if document_id is not None
-        else ""
-    )
+    if document_ids is not None:
+        ids_str = ", ".join(str(d) for d in document_ids)
+        search_filter = f"{DOCUMENT_ID_FIELD} in [{ids_str}]"
+    elif document_id is not None:
+        search_filter = f"{DOCUMENT_ID_FIELD} == {document_id}"
+    else:
+        search_filter = ""
     results = client.search(
         collection_name=COLLECTION_NAME,
         data=query_embeddings,
@@ -139,4 +142,41 @@ def replace_document_chunks(
         embeddings=embeddings,
         page_no=page_no,
         metadata=metadata,
+    )
+
+
+def list_milvus_chunk_ids(
+    *,
+    batch_size: int = 10000,
+) -> list[dict[str, Any]]:
+    """List all chunk_id/document_id rows from Milvus using paginated query."""
+    _ensure_milvus()
+    client = get_milvus_client()
+    rows: list[dict[str, Any]] = []
+    offset = 0
+    while True:
+        batch = client.query(
+            collection_name=COLLECTION_NAME,
+            filter="",
+            output_fields=[CHUNK_ID_FIELD, DOCUMENT_ID_FIELD],
+            limit=batch_size,
+            offset=offset,
+        )
+        if not batch:
+            break
+        rows.extend(batch)
+        offset += len(batch)
+    return rows
+
+
+def delete_chunks_by_ids(chunk_ids: list[int]) -> dict[str, Any]:
+    """Delete multiple chunks from Milvus by chunk_id."""
+    if not chunk_ids:
+        return {"delete_count": 0}
+    _ensure_milvus()
+    client = get_milvus_client()
+    ids_str = ", ".join(str(chunk_id) for chunk_id in chunk_ids)
+    return client.delete(
+        collection_name=COLLECTION_NAME,
+        filter=f"{CHUNK_ID_FIELD} in [{ids_str}]",
     )

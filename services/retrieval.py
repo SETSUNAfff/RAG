@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from crud.milvus.knowledge_chunks import search_knowledge_chunks
 from crud.mysql.bm25 import bm25_search
 from crud.mysql.chunks import get_chunk_details_by_ids
+from services.cache import get_cached_search, set_cached_search
 from services.embeddings import get_embedding_model
 
 
@@ -33,14 +35,42 @@ class RetrievalResult:
             "content": self.content,
         }
 
+    def to_cache_dict(self) -> dict[str, Any]:
+        # 完整序列化检索结果，Redis 缓存恢复后可直接构造 RetrievalResult。
+        return {
+            "chunk_id": self.chunk_id,
+            "document_id": self.document_id,
+            "title": self.title,
+            "page_no": self.page_no,
+            "content": self.content,
+            "metadata": self.metadata,
+            "vector_score": self.vector_score,
+            "bm25_score": self.bm25_score,
+            "rrf_score": self.rrf_score,
+            "rerank_score": self.rerank_score,
+        }
+
+    @classmethod
+    def from_cache_dict(cls, data: dict[str, Any]) -> "RetrievalResult":
+        # 从 Redis 中的 JSON 恢复检索结果。
+        return cls(**data)
+
+
+def _encode_query(query: str) -> list[list[float]]:
+    return get_embedding_model().encode([query]).tolist()
+
 
 async def _vector_search(
     db: AsyncSession,
     query: str,
     top_n: int,
+    *,
+    document_ids: list[int] | None = None,
 ) -> list[RetrievalResult]:
-    embedding = get_embedding_model().encode([query]).tolist()
-    hits = search_knowledge_chunks(embedding, top_n)
+    embedding = await asyncio.to_thread(_encode_query, query)
+    hits = await asyncio.to_thread(
+        search_knowledge_chunks, embedding, top_n, document_ids=document_ids
+    )
     if not hits:
         return []
 
@@ -75,8 +105,10 @@ async def _bm25_search(
     db: AsyncSession,
     query: str,
     top_n: int,
+    *,
+    document_ids: list[int] | None = None,
 ) -> list[RetrievalResult]:
-    hits = await bm25_search(db, query, top_n)
+    hits = await bm25_search(db, query, top_n, document_ids=document_ids)
     return [
         RetrievalResult(
             chunk_id=hit.chunk_id,
@@ -139,10 +171,28 @@ async def hybrid_search(
     bm25_top_n: int = 10,
     rrf_candidates: int = 10,
     use_rerank: bool = True,
+    document_ids: list[int] | None = None,
 ) -> list[RetrievalResult]:
     """Run vector + BM25 fusion, then optional cross-encoder reranking."""
-    vector_results = await _vector_search(db, query, vector_top_n)
-    bm25_results = await _bm25_search(db, query, bm25_top_n)
+    # 先查 Redis；命中则跳过向量检索、BM25 和 rerank。
+    if document_ids is None:
+        cached = await get_cached_search(
+            query,
+            top_k,
+            vector_top_n,
+            bm25_top_n,
+            rrf_candidates,
+            use_rerank,
+        )
+        if cached is not None:
+            return [RetrievalResult.from_cache_dict(item) for item in cached]
+
+    vector_results = await _vector_search(
+        db, query, vector_top_n, document_ids=document_ids
+    )
+    bm25_results = await _bm25_search(
+        db, query, bm25_top_n, document_ids=document_ids
+    )
     fused = rrf_merge(
         vector_results,
         bm25_results,
@@ -152,5 +202,17 @@ async def hybrid_search(
     if use_rerank:
         from services.rerank import rerank_results
 
-        fused = rerank_results(query, fused)
-    return fused[:top_k]
+        fused = await asyncio.to_thread(rerank_results, query, fused)
+    results = fused[:top_k]
+    # 把最终结果写入 Redis，5 分钟内相同查询直接复用。
+    if document_ids is None:
+        await set_cached_search(
+            query,
+            top_k,
+            vector_top_n,
+            bm25_top_n,
+            rrf_candidates,
+            use_rerank,
+            [item.to_cache_dict() for item in results],
+        )
+    return results

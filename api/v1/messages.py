@@ -11,6 +11,7 @@ from crud.mysql import (
 )
 from schemas.common import Page
 from schemas.mysql import MessageCreate, MessageRead, MessageUpdate
+from services.cache import invalidate_conversation_history
 
 # 消息 CRUD 路由；可按 conversation_id 查询某个会话的消息列表。
 router = APIRouter(prefix="/messages")
@@ -37,7 +38,10 @@ async def create_new_message(
     data: MessageCreate,
     db: AsyncSession = Depends(get_db),
 ) -> MessageRead:
-    return await create_message(db, data)
+    message = await create_message(db, data)
+    # 直接新增消息后清空该会话的 Redis 历史缓存，避免 chat 读到旧上下文。
+    await invalidate_conversation_history(message.conversation_id)
+    return message
 
 
 @router.get("/{message_id}", response_model=MessageRead)
@@ -60,6 +64,8 @@ async def update_existing_message(
     message = await update_message(db, message_id, data)
     if message is None:
         raise HTTPException(status_code=404, detail="Message not found")
+    # 消息内容变化后清空 Redis 历史缓存。
+    await invalidate_conversation_history(message.conversation_id)
     return message
 
 
@@ -68,7 +74,10 @@ async def delete_existing_message(
     message_id: int,
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    if await get_message(db, message_id) is None:
+    message = await get_message(db, message_id)
+    if message is None:
         raise HTTPException(status_code=404, detail="Message not found")
     await delete_message(db, message_id)
+    # 删除消息后清空 Redis 历史缓存，保证 chat 上下文与数据库一致。
+    await invalidate_conversation_history(message.conversation_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

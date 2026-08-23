@@ -53,6 +53,14 @@ def test_hybrid_search_uses_both_sources_without_rerank() -> None:
 
     with (
         patch(
+            "services.retrieval.get_cached_search",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "services.retrieval.set_cached_search",
+            new=AsyncMock(),
+        ),
+        patch(
             "services.retrieval._vector_search",
             new=AsyncMock(return_value=vector_results),
         ),

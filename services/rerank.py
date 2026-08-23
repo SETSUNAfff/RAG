@@ -12,7 +12,7 @@ from services.retrieval import RetrievalResult
 @lru_cache(maxsize=1)
 def get_rerank_model() -> CrossEncoder:
     load_dotenv(override=True)
-    model_path = os.getenv("RERANK_MODEL_PATH", "BAAI/bge-reranker-base")
+    model_path = os.getenv("RERANK_MODEL_PATH")
     return CrossEncoder(model_path)
 
 

@@ -14,7 +14,20 @@ from models.milvus.knowledge_chunks import (
 )
 
 load_dotenv(override=True)
-MILVUS_HOST = os.getenv("MILVUS_HOST", "127.0.0.1")
+MILVUS_DEFAULT_PORT = 19530
+
+
+def _parse_milvus_address(address: str) -> tuple[str, int]:
+    if ":" in address:
+        host, _, port = address.rpartition(":")
+        if port.isdigit():
+            return host, int(port)
+    return address, MILVUS_DEFAULT_PORT
+
+
+MILVUS_HOST, MILVUS_PORT = _parse_milvus_address(
+    os.getenv("MILVUS_HOST", "127.0.0.1")
+)
 logger = logging.getLogger(__name__)
 
 # Milvus 客户端使用惰性单例，导入模块时不会连接外部服务。
@@ -25,7 +38,7 @@ def get_milvus_client() -> MilvusClient:
     # 首次使用时创建客户端，后续复用同一个实例。
     global _client
     if _client is None:
-        _client = MilvusClient(host=MILVUS_HOST)
+        _client = MilvusClient(host=MILVUS_HOST, port=MILVUS_PORT)
     return _client
 
 
@@ -52,3 +65,7 @@ def init_milvus() -> None:
         logger.info("Created Milvus collection %s", COLLECTION_NAME)
     else:
         logger.info("Milvus collection %s already exists", COLLECTION_NAME)
+
+    # Milvus 集合必须显式加载后才能搜索，否则会报 channel not available。
+    # 这里会等待集合加载完成，首次加载或 Milvus 重启后尤其必要。
+    client.load_collection(collection_name=COLLECTION_NAME, timeout=120)
