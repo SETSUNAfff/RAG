@@ -6,8 +6,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from crud.milvus.knowledge_chunks import search_knowledge_chunks
-from crud.mysql.bm25 import bm25_search
+from crud.milvus.knowledge_chunks import hybrid_search_knowledge_chunks
 from crud.mysql.chunks import get_chunk_details_by_ids
 from services.cache import get_cached_search, set_cached_search
 from services.embeddings import get_embedding_model
@@ -60,16 +59,25 @@ def _encode_query(query: str) -> list[list[float]]:
     return get_embedding_model().encode([query]).tolist()
 
 
-async def _vector_search(
+async def _hybrid_search(
     db: AsyncSession,
     query: str,
     top_n: int,
     *,
+    vector_limit: int = 10,
+    sparse_limit: int = 10,
     document_ids: list[int] | None = None,
 ) -> list[RetrievalResult]:
+    """Dense + sparse hybrid search in Milvus, then enrich from MySQL."""
     embedding = await asyncio.to_thread(_encode_query, query)
     hits = await asyncio.to_thread(
-        search_knowledge_chunks, embedding, top_n, document_ids=document_ids
+        hybrid_search_knowledge_chunks,
+        query_embedding=embedding[0],
+        query_text=query,
+        top_k=top_n,
+        vector_limit=vector_limit,
+        sparse_limit=sparse_limit,
+        document_ids=document_ids,
     )
     if not hits:
         return []
@@ -95,71 +103,10 @@ async def _vector_search(
                 page_no=chunk.page_no,
                 content=chunk.content,
                 metadata=chunk.meta,
-                vector_score=float(hit["score"]),
+                rrf_score=float(hit["score"]),
             )
         )
     return results
-
-
-async def _bm25_search(
-    db: AsyncSession,
-    query: str,
-    top_n: int,
-    *,
-    document_ids: list[int] | None = None,
-) -> list[RetrievalResult]:
-    hits = await bm25_search(db, query, top_n, document_ids=document_ids)
-    return [
-        RetrievalResult(
-            chunk_id=hit.chunk_id,
-            document_id=hit.document_id,
-            title=hit.title,
-            page_no=hit.page_no,
-            content=hit.content,
-            metadata=hit.metadata,
-            bm25_score=hit.score,
-        )
-        for hit in hits
-    ]
-
-
-def rrf_merge(
-    vector_results: list[RetrievalResult],
-    bm25_results: list[RetrievalResult],
-    *,
-    k: int = 60,
-    top_n: int = 10,
-) -> list[RetrievalResult]:
-    """Reciprocal Rank Fusion over vector and BM25 result lists."""
-    merged: dict[int, RetrievalResult] = {}
-
-    def _base(item: RetrievalResult) -> RetrievalResult:
-        return RetrievalResult(
-            chunk_id=item.chunk_id,
-            document_id=item.document_id,
-            title=item.title,
-            page_no=item.page_no,
-            content=item.content,
-            metadata=item.metadata,
-        )
-
-    for results, score_attr in (
-        (vector_results, "vector_score"),
-        (bm25_results, "bm25_score"),
-    ):
-        for rank, item in enumerate(results, start=1):
-            current = merged.setdefault(item.chunk_id, _base(item))
-            if score_attr == "vector_score":
-                current.vector_score = item.vector_score
-            else:
-                current.bm25_score = item.bm25_score
-            current.rrf_score = (current.rrf_score or 0.0) + 1.0 / (k + rank)
-
-    return sorted(
-        merged.values(),
-        key=lambda item: item.rrf_score or 0.0,
-        reverse=True,
-    )[:top_n]
 
 
 async def hybrid_search(
@@ -173,8 +120,8 @@ async def hybrid_search(
     use_rerank: bool = True,
     document_ids: list[int] | None = None,
 ) -> list[RetrievalResult]:
-    """Run vector + BM25 fusion, then optional cross-encoder reranking."""
-    # 先查 Redis；命中则跳过向量检索、BM25 和 rerank。
+    """Milvus hybrid search + optional cross-encoder reranking."""
+    # 先查 Redis；命中则跳过 Milvus 检索和 rerank。
     if document_ids is None:
         cached = await get_cached_search(
             query,
@@ -187,23 +134,21 @@ async def hybrid_search(
         if cached is not None:
             return [RetrievalResult.from_cache_dict(item) for item in cached]
 
-    vector_results = await _vector_search(
-        db, query, vector_top_n, document_ids=document_ids
-    )
-    bm25_results = await _bm25_search(
-        db, query, bm25_top_n, document_ids=document_ids
-    )
-    fused = rrf_merge(
-        vector_results,
-        bm25_results,
-        top_n=rrf_candidates,
+    fused = await _hybrid_search(
+        db,
+        query,
+        rrf_candidates,
+        vector_limit=vector_top_n,
+        sparse_limit=bm25_top_n,
+        document_ids=document_ids,
     )
 
-    if use_rerank:
+    if use_rerank and fused:
         from services.rerank import rerank_results
 
         fused = await asyncio.to_thread(rerank_results, query, fused)
     results = fused[:top_k]
+
     # 把最终结果写入 Redis，5 分钟内相同查询直接复用。
     if document_ids is None:
         await set_cached_search(

@@ -1,13 +1,19 @@
 from threading import Lock
 from typing import Any
 
+from pymilvus import AnnSearchRequest, RRFRanker
+
 from config.milvus_client import COLLECTION_NAME, get_milvus_client, init_milvus
 from models.milvus.knowledge_chunks import (
     CHUNK_ID_FIELD,
+    CONTENT_TEXT_FIELD,
     DOCUMENT_ID_FIELD,
+    EMBEDDING_FIELD,
     METADATA_FIELD,
     METRIC_TYPE,
     PAGE_NO_FIELD,
+    SPARSE_EMBEDDING_FIELD,
+    SPARSE_METRIC_TYPE,
 )
 
 _initialized = False
@@ -29,21 +35,20 @@ def insert_knowledge_chunks(
     chunk_id: list[int],
     document_id: int,
     embeddings: list[list[float]],
+    content_text: list[str],
     page_no: list[int] | None = None,
     metadata: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     _ensure_milvus()
     client = get_milvus_client()
-    if len(chunk_id) != len(embeddings):
-        raise ValueError("chunk_id和embeddings必须是相同长度！")
+    if len(chunk_id) != len(embeddings) or len(chunk_id) != len(content_text):
+        raise ValueError("chunk_id、embeddings、content_text 必须是相同长度！")
 
     page_no = page_no if page_no is not None else [0] * len(chunk_id)
     metadata = metadata if metadata is not None else [{}] * len(chunk_id)
 
     if len(page_no) != len(chunk_id) or len(metadata) != len(chunk_id):
-        raise ValueError(
-            "chunk_id, page_no, metadata必须是相同长度！"
-        )
+        raise ValueError("chunk_id, page_no, metadata必须是相同长度！")
 
     rows = [
         {
@@ -52,57 +57,79 @@ def insert_knowledge_chunks(
             "document_id": document_id,
             "page_no": page_no,
             "metadata": metadata,
+            "content_text": content_text,
         }
-        for chunk_id, embedding, page_no, metadata in zip(
+        for chunk_id, embedding, content_text, page_no, metadata in zip(
             chunk_id,
             embeddings,
+            content_text,
             page_no,
             metadata,
         )
     ]
 
-    return client.insert(collection_name=COLLECTION_NAME, data=rows)
+    result = client.insert(collection_name=COLLECTION_NAME, data=rows)
+    # 让数据落盘并使 sparse 索引尽快可搜，避免写后立即查询读到不完整索引。
+    client.flush(collection_name=COLLECTION_NAME)
+    return result
 
 
-def search_knowledge_chunks(
-    query_embeddings: list[list[float]],
+def hybrid_search_knowledge_chunks(
+    query_embedding: list[float],
+    query_text: str,
     top_k: int = 10,
     *,
-    document_id: int | None = None,
+    vector_limit: int = 10,
+    sparse_limit: int = 10,
     document_ids: list[int] | None = None,
 ) -> list[dict[str, Any]]:
-    """Search Milvus by embedding and return scalar chunk metadata."""
+    """Dense + sparse hybrid search with RRF fusion inside Milvus."""
     _ensure_milvus()
     client = get_milvus_client()
-    if document_ids is not None:
+    filter_expr = ""
+    if document_ids:
         ids_str = ", ".join(str(d) for d in document_ids)
-        search_filter = f"{DOCUMENT_ID_FIELD} in [{ids_str}]"
-    elif document_id is not None:
-        search_filter = f"{DOCUMENT_ID_FIELD} == {document_id}"
-    else:
-        search_filter = ""
-    results = client.search(
+        filter_expr = f"{DOCUMENT_ID_FIELD} in [{ids_str}]"
+
+    dense_req = AnnSearchRequest(
+        data=[query_embedding],
+        anns_field=EMBEDDING_FIELD,
+        param={"metric_type": METRIC_TYPE},
+        limit=vector_limit,
+        expr=filter_expr or None,
+    )
+    sparse_req = AnnSearchRequest(
+        data=[query_text],
+        anns_field=SPARSE_EMBEDDING_FIELD,
+        param={"metric_type": SPARSE_METRIC_TYPE},
+        limit=sparse_limit,
+        expr=filter_expr or None,
+    )
+
+    results = client.hybrid_search(
         collection_name=COLLECTION_NAME,
-        data=query_embeddings,
+        reqs=[dense_req, sparse_req],
+        ranker=RRFRanker(60),
         limit=top_k,
         output_fields=[
             CHUNK_ID_FIELD,
             DOCUMENT_ID_FIELD,
             PAGE_NO_FIELD,
             METADATA_FIELD,
+            CONTENT_TEXT_FIELD,
         ],
-        search_params={"metric_type": METRIC_TYPE, "params": {}},
-        filter=search_filter,
     )
     hits = results[0] if results else []
     parsed: list[dict[str, Any]] = []
     for hit in hits:
+        entity = hit.get("entity", {}) if isinstance(hit, dict) else {}
         parsed.append(
             {
-                "chunk_id": hit.get(CHUNK_ID_FIELD, hit.get("id")),
-                "document_id": hit.get(DOCUMENT_ID_FIELD),
-                "page_no": hit.get(PAGE_NO_FIELD),
-                "metadata": hit.get(METADATA_FIELD) or {},
+                "chunk_id": entity.get(CHUNK_ID_FIELD, hit.get(CHUNK_ID_FIELD)),
+                "document_id": entity.get(DOCUMENT_ID_FIELD),
+                "page_no": entity.get(PAGE_NO_FIELD),
+                "metadata": entity.get(METADATA_FIELD) or {},
+                "content": entity.get(CONTENT_TEXT_FIELD, ""),
                 "score": hit.get("distance", 0.0),
             }
         )
@@ -132,6 +159,7 @@ def replace_document_chunks(
     chunk_id: list[int],
     document_id: int,
     embeddings: list[list[float]],
+    content_text: list[str],
     page_no: list[int] | None = None,
     metadata: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
@@ -140,6 +168,7 @@ def replace_document_chunks(
         chunk_id=chunk_id,
         document_id=document_id,
         embeddings=embeddings,
+        content_text=content_text,
         page_no=page_no,
         metadata=metadata,
     )

@@ -15,7 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config.mysql_engine import get_db
 from pydantic import BaseModel
 from crud.milvus import delete_document_chunks
-from crud.mysql.bm25 import invalidate_bm25_index
 from services.cache import invalidate_search_cache
 from crud.mysql import (
     create_document,
@@ -215,7 +214,6 @@ async def delete_existing_document(
             detail=f"Milvus cleanup failed: {exc}",
         ) from exc
     await delete_document(db, document_id)
-    invalidate_bm25_index()
     # 删除文档后清空 Redis 检索缓存，避免返回已删除内容的检索结果。
     await invalidate_search_cache()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -237,7 +235,6 @@ async def batch_delete_documents(
                 detail=f"Milvus cleanup failed for document {document_id}: {exc}",
             ) from exc
         await delete_document(db, document_id)
-    invalidate_bm25_index()
     await invalidate_search_cache()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

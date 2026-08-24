@@ -14,7 +14,6 @@ from pypdf import PdfReader
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crud.mysql.chunks import create_chunks, hard_delete_chunks_by_document
-from crud.mysql.bm25 import invalidate_bm25_index
 from models.mysql import Document
 from schemas.mysql import ChunkCreate, DocumentStatus
 from services.cache import invalidate_search_cache
@@ -25,6 +24,7 @@ from services.locks import ingestion_lock
 SUPPORTED_FILE_TYPES = ["pdf", "docx", "md", "markdown", "html", "htm", "txt"]
 SUPPORTED_EXTENSIONS = {f".{extension}" for extension in SUPPORTED_FILE_TYPES}
 _TEXT_ENCODINGS = ("utf-8-sig", "gb18030", "utf-16", "latin-1")
+
 
 # 文档上传，分析格式，清洗数据
 def _decode_text(data: bytes) -> str:
@@ -86,6 +86,7 @@ def split_text(text: str, chunk_size: int = 500, chunk_overlap: int = 0) -> list
     )
     return splitter.split_text(text)
 
+
 # 上传文件入库：MySQL chunks 先拿到自增 ID，Milvus 再使用同一 ID。
 async def ingest_uploaded_file(
     db: AsyncSession,
@@ -146,6 +147,7 @@ async def ingest_uploaded_file(
                 chunk_id=chunk_ids,
                 document_id=document_id,
                 embeddings=embeddings.tolist(),
+                content_text=chunks,
                 page_no=page_nos,
                 metadata=chunk_metadata,
             )
@@ -157,8 +159,7 @@ async def ingest_uploaded_file(
             await db.commit()
             # 提交后刷新服务端生成的 updated_at，避免响应序列化时触发异步懒加载。
             await db.refresh(document)
-            invalidate_bm25_index()
-            # 文档内容变更后清空 Redis 检索缓存，避免命中旧向量/BM25 结果。
+            # 文档内容变更后清空 Redis 检索缓存，避免命中旧结果。
             await invalidate_search_cache()
             return result
         except Exception as exc:

@@ -10,6 +10,9 @@ from models.milvus.knowledge_chunks import (
     EMBEDDING_FIELD,
     INDEX_TYPE,
     METRIC_TYPE,
+    SPARSE_EMBEDDING_FIELD,
+    SPARSE_INDEX_TYPE,
+    SPARSE_METRIC_TYPE,
     schema as collection_schema,
 )
 
@@ -57,6 +60,11 @@ def init_milvus() -> None:
             index_type=INDEX_TYPE,
             metric_type=METRIC_TYPE,
         )
+        index_params.add_index(
+            field_name=SPARSE_EMBEDDING_FIELD,
+            index_type=SPARSE_INDEX_TYPE,
+            metric_type=SPARSE_METRIC_TYPE,
+        )
         client.create_collection(
             collection_name=COLLECTION_NAME,
             schema=collection_schema,
@@ -67,5 +75,4 @@ def init_milvus() -> None:
         logger.info("Milvus collection %s already exists", COLLECTION_NAME)
 
     # Milvus 集合必须显式加载后才能搜索，否则会报 channel not available。
-    # 这里会等待集合加载完成，首次加载或 Milvus 重启后尤其必要。
     client.load_collection(collection_name=COLLECTION_NAME, timeout=120)
