@@ -1,0 +1,457 @@
+{
+  "source_document": "公司制度培训手册（业务人员版）V1.0.md",
+  "version": "V1.0",
+  "description": "基于《公司制度培训手册（业务人员版）V1.0》整理的离线评测集，覆盖考勤、差旅报销、采购资产、合同客户、财务商务、信息安全、行为规范、培训晋升、奖惩申诉等章节。",
+  "cases": [
+    {
+      "id": "case-001",
+      "chapter": "第一章 前言",
+      "difficulty": "easy",
+      "question": "手册里没有写的情况怎么办？",
+      "expected_answer": "先问直属主管；主管不确定的，由主管向对应职能部门（财务、法务、HR）咨询，不要自己猜。制度不可能覆盖所有场景，不确定时先问再做。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "Q：手册里没写的情况怎么办？A：先问你的直属主管。主管也不确定的，由主管向对应职能部门（财务/法务/HR）咨询，不要自己猜。"
+    },
+    {
+      "id": "case-002",
+      "chapter": "第一章 前言",
+      "difficulty": "medium",
+      "question": "手册和部门内部规定不一致时，以哪个为准？",
+      "expected_answer": "部门内部规定可以比公司制度更严格，但不能更宽松。如果部门规定比手册要求更严，按部门规定执行；如果部门规定与手册冲突，以更严格的为准，同时向 HR 反馈确认。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "部门内部规定可以比公司制度更严格，但不能更宽松。如果部门规定比手册要求更严，按部门规定执行；如果部门规定和手册冲突，以更严格的为准，同时向 HR 反馈确认。"
+    },
+    {
+      "id": "case-003",
+      "chapter": "第二章 公司概况与企业文化",
+      "difficulty": "easy",
+      "question": "公司是哪一年成立的，主营什么业务？",
+      "expected_answer": "公司成立于 2015 年，是一家专注于企业级 SaaS 服务的科技公司，核心产品是面向中大型企业的客户关系管理（CRM）平台。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "公司成立于 2015 年，是一家专注于企业级 SaaS 服务的科技公司。核心产品是面向中大型企业的客户关系管理（CRM）平台。"
+    },
+    {
+      "id": "case-004",
+      "chapter": "第二章 公司概况与企业文化",
+      "difficulty": "medium",
+      "question": "公司的五大价值观是什么？",
+      "expected_answer": "客户第一、坦诚透明、追求极致、拥抱变化、协作共赢。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "1. 客户第一：做决策时先想对客户好不好。2. 坦诚透明：有问题当面说，有数据公开看。3. 追求极致：交付的东西要过自己这一关。4. 拥抱变化：主动适应变化。5. 协作共赢：跨部门协作多想我能帮对方什么。"
+    },
+    {
+      "id": "case-005",
+      "chapter": "第二章 公司概况与企业文化",
+      "difficulty": "medium",
+      "question": "客户提出一个产品目前不支持的功能需求，销售应该怎么做？",
+      "expected_answer": "应如实告知客户该功能目前不在近期规划里，并提供可行的替代方案，不要先答应客户下个版本就做。这体现客户第一和坦诚透明的价值观。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "小张选择了第二种。虽然这个单子的签约周期因此延长了两周，但客户因为小张的坦诚而更加信任公司。这个案例体现的就是客户第一和坦诚透明的价值观。"
+    },
+    {
+      "id": "case-006",
+      "chapter": "第三章 考勤与请假管理制度",
+      "difficulty": "easy",
+      "question": "我早上 9:05 到公司，算迟到吗？",
+      "expected_answer": "算迟到，但在每月前 3 次迟到豁免范围内，不扣工资。迟到次数会影响季度绩效评估中的职业素养维度。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "Q：我早上 9:05 到公司，算迟到吗？A：算迟到，但在每月前 3 次迟到豁免范围内，不扣工资。"
+    },
+    {
+      "id": "case-007",
+      "chapter": "第三章 考勤与请假管理制度",
+      "difficulty": "easy",
+      "question": "忘记打卡了应该怎么办？",
+      "expected_answer": "须在 3 个工作日内通过考勤系统提交补卡申请，经直属主管审批后生效；每月补卡次数不得超过 3 次，超出部分按迟到或旷工处理。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "忘记打卡的，须在 3 个工作日内提交补卡申请，经直属主管审批后生效。每月补卡次数不得超过 3 次，超出部分按迟到或旷工处理。"
+    },
+    {
+      "id": "case-008",
+      "chapter": "第三章 考勤与请假管理制度",
+      "difficulty": "medium",
+      "question": "迟到 1 个小时会怎么处理？",
+      "expected_answer": "迟到 15 分钟以上、2 小时以内属于严重迟到，扣除当日半天工资。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "迟到 15 分钟以上、2 小时以内，算严重迟到，扣除当日半天工资。"
+    },
+    {
+      "id": "case-009",
+      "chapter": "第三章 考勤与请假管理制度",
+      "difficulty": "medium",
+      "question": "连续旷工几天公司可以解除劳动合同？",
+      "expected_answer": "连续旷工 3 天或年度累计旷工 5 天，公司有权解除劳动合同，且不支付经济补偿。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "连续旷工 3 天或年度累计旷工 5 天：公司有权解除劳动合同，且不支付经济补偿。"
+    },
+    {
+      "id": "case-010",
+      "chapter": "第三章 考勤与请假管理制度",
+      "difficulty": "easy",
+      "question": "请病假超过 3 天需要提供什么证明？",
+      "expected_answer": "需要提供二级及以上医院的诊断证明和病假条；社区医院、诊所的证明只适用于 3 天以内的病假。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "请病假超过 3 天的，需要提供二级及以上医院的诊断证明和病假条。社区医院、诊所的证明只适用于 3 天以内的病假。"
+    },
+    {
+      "id": "case-011",
+      "chapter": "第三章 考勤与请假管理制度",
+      "difficulty": "medium",
+      "question": "工作日晚上的加班怎么补偿？",
+      "expected_answer": "工作日加班按 1:1 折算调休假，不支付加班费；周末加班按 1:1 折算调休或按日工资 200% 支付加班费；法定节假日加班按日工资 300% 支付加班费，不折算调休。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "工作日加班：按 1:1 折算调休假，不支付加班费。周末加班：按 1:1 折算调休假，或按日工资的 200% 支付加班费。法定节假日加班：按日工资的 300% 支付加班费，不折算调休。"
+    },
+    {
+      "id": "case-012",
+      "chapter": "第三章 考勤与请假管理制度",
+      "difficulty": "medium",
+      "question": "入职满 2 年的员工每年有多少天年假？",
+      "expected_answer": "入职满 1 年不满 10 年的员工，每年 5 天年假。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "入职满 1 年不满 10 年：每年 5 天年假。"
+    },
+    {
+      "id": "case-013",
+      "chapter": "第四章 差旅与费用报销制度",
+      "difficulty": "easy",
+      "question": "出差前必须完成什么流程？",
+      "expected_answer": "必须在 OA 系统中提交差旅申请，先审批后出行；没有审批的出差，费用一律不予报销。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "出差必须先审批后出行，这是铁律。没有审批的出差，费用一律不予报销。"
+    },
+    {
+      "id": "case-014",
+      "chapter": "第四章 差旅与费用报销制度",
+      "difficulty": "easy",
+      "question": "普通员工在一线城市出差的住宿标准是多少？",
+      "expected_answer": "一线城市（北京、上海、广州、深圳）普通员工住宿标准为 500 元/晚上限。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "一线城市（北京、上海、广州、深圳）普通员工 500 元/晚"
+    },
+    {
+      "id": "case-015",
+      "chapter": "第四章 差旅与费用报销制度",
+      "difficulty": "medium",
+      "question": "出差餐饮补贴是多少？",
+      "expected_answer": "一线城市 100 元/天，新一线城市 80 元/天，其他城市 60 元/天；出差期间如有公司安排的工作餐，当天补贴减半。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "一线城市：100 元/天；新一线城市：80 元/天；其他城市：60 元/天。出差期间如有公司安排的工作餐，当天补贴减半。"
+    },
+    {
+      "id": "case-016",
+      "chapter": "第四章 差旅与费用报销制度",
+      "difficulty": "easy",
+      "question": "差旅报销的时间限制是什么？",
+      "expected_answer": "差旅报销须在出差结束后 30 天内提交；超过 30 天需说明延迟原因并经部门总监审批后方可受理；超过 90 天原则上不予受理，费用由个人承担。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "差旅报销须在出差结束后 30 天内提交。超过 30 天的，须在报销时说明延迟原因，经部门总监审批后方可受理。超过 90 天未提交的报销，原则上不予受理，费用由个人承担。"
+    },
+    {
+      "id": "case-017",
+      "chapter": "第四章 差旅与费用报销制度",
+      "difficulty": "medium",
+      "question": "报销单被退回最常见的原因是什么？",
+      "expected_answer": "最常见的是发票抬头或税号错误，其次是缺少消费明细、报销金额与发票合计不一致、差旅申请未审批或未关联、发票模糊或不完整。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "1. 发票抬头或税号错误：最常见的退单原因。2. 缺少消费明细（水单）。3. 报销单金额与发票合计不一致。4. 差旅申请未审批或未关联。5. 发票模糊或不完整。"
+    },
+    {
+      "id": "case-018",
+      "chapter": "第五章 采购与资产管理制度",
+      "difficulty": "easy",
+      "question": "采购的核心原则是什么？",
+      "expected_answer": "先申请后采购，谁申请谁负责，资产登记到人；严禁先买后报，未经审批的采购费用由个人承担。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "采购制度的核心原则是：先申请后采购，谁申请谁负责，资产登记到人。严禁先买后报，未经审批的采购费用由个人承担。"
+    },
+    {
+      "id": "case-019",
+      "chapter": "第五章 采购与资产管理制度",
+      "difficulty": "medium",
+      "question": "可以把一笔大额采购拆成几笔小额申请来走审批吗？",
+      "expected_answer": "不可以。拆分采购属于违规行为，不得为了规避审批权限把一笔采购拆成多笔小额申请，发现拆单会退回并通报。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "拆分采购是违规行为。不得为了规避审批权限，把一笔采购拆成多笔小额申请。采购部会定期检查，发现拆单的会退回并通报。"
+    },
+    {
+      "id": "case-020",
+      "chapter": "第五章 采购与资产管理制度",
+      "difficulty": "medium",
+      "question": "公司配的电脑丢失或被盗了怎么办？",
+      "expected_answer": "须在 24 小时内向 IT 部和直属主管报告，涉及被盗的向公安机关报案；因个人疏忽导致丢失的，须按资产折旧后的净值赔偿。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "电脑丢失或被盗：须在 24 小时内向 IT 部和直属主管报告，并向公安机关报案。因个人疏忽导致丢失的，须按资产折旧后的净值赔偿。"
+    },
+    {
+      "id": "case-021",
+      "chapter": "第五章 采购与资产管理制度",
+      "difficulty": "easy",
+      "question": "离职时可以直接格式化公司电脑吗？",
+      "expected_answer": "不能。离职时电脑必须原样归还 IT 部，由 IT 部进行数据备份和清除；格式化电脑会导致工作数据丢失，属于严重违纪。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "离职时电脑必须原样归还 IT 部，由 IT 部进行数据备份和清除。不需要直接格式化电脑，格式化电脑会导致工作数据丢失，属于严重违纪。"
+    },
+    {
+      "id": "case-022",
+      "chapter": "第六章 合同与客户管理制度",
+      "difficulty": "easy",
+      "question": "业务人员能代表公司签合同吗？",
+      "expected_answer": "不能。只有公司法定代表人或其授权委托人有权签署合同，业务人员即使客户要求也无权代表公司签署任何合同。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "公司法定代表人或其授权委托人有权签署合同。业务人员无权代表公司签署任何合同，即使客户要求也不行。"
+    },
+    {
+      "id": "case-023",
+      "chapter": "第六章 合同与客户管理制度",
+      "difficulty": "medium",
+      "question": "合同金额在 5 万元以内，审批流程是怎样的？",
+      "expected_answer": "合同金额 5 万以内：直属主管审批后到法务审核。所有合同无论金额大小都不能跳过法务。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "合同金额 5 万以内：直属主管 → 法务。所有合同必须经法务审核后方可签署，这是不可逾越的红线。"
+    },
+    {
+      "id": "case-024",
+      "chapter": "第六章 合同与客户管理制度",
+      "difficulty": "easy",
+      "question": "新客户必须在首次接触后多久内录入 CRM？",
+      "expected_answer": "所有接触过的潜在客户和已有客户都必须在 CRM 系统创建客户档案，新客户录入须在首次接触后 2 个工作日内完成。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "所有接触过的潜在客户和已有客户，都必须在 CRM 系统中创建客户档案。新客户录入须在首次接触后 2 个工作日内完成。"
+    },
+    {
+      "id": "case-025",
+      "chapter": "第六章 合同与客户管理制度",
+      "difficulty": "easy",
+      "question": "客户联系人发生变化，应该多久更新 CRM？",
+      "expected_answer": "客户联系人变更后须在 3 个工作日内更新 CRM 信息。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "客户联系人发生变更（如对方换了对接人），须在 3 个工作日内更新 CRM 信息。"
+    },
+    {
+      "id": "case-026",
+      "chapter": "第六章 合同与客户管理制度",
+      "difficulty": "medium",
+      "question": "报价单的有效期一般多久？",
+      "expected_answer": "报价单有效期一般为 30 天，超期需要重新报价；不得向客户泄露成本价、底价、其他客户成交价等敏感价格信息。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "报价单有效期一般为 30 天，超期需重新报价。不得向客户泄露公司的成本价、底价、其他客户的成交价等敏感价格信息。"
+    },
+    {
+      "id": "case-027",
+      "chapter": "第六章 合同与客户管理制度",
+      "difficulty": "medium",
+      "question": "销售代表的折扣权限是多少？",
+      "expected_answer": "销售代表可在标准价 9 折以内给折扣，超出权限须上报销售经理审批。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "销售代表：标准价的 9 折以内，须上报销售经理审批。"
+    },
+    {
+      "id": "case-028",
+      "chapter": "第六章 合同与客户管理制度",
+      "difficulty": "medium",
+      "question": "客户归属以什么为准？客户被同事抢了怎么办？",
+      "expected_answer": "客户归属以 CRM 系统中的负责人记录为准，不以个人关系为准。如果 CRM 中有持续跟进记录，其他同事不得重复创建或抢夺；发生争议先由双方主管协调，协调不成由部门总监裁定。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "客户归属以 CRM 系统中的负责人为准，不以个人关系为准。如果你在 CRM 中持续跟进该客户，其他同事不得重复创建或抢夺。"
+    },
+    {
+      "id": "case-029",
+      "chapter": "第七章 财务与商务规范",
+      "difficulty": "easy",
+      "question": "财务部开出发票需要多久？",
+      "expected_answer": "开票申请审批通过后，财务部在 3 个工作日内开具发票并寄出或提供电子发票。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "财务部在 3 个工作日内开具发票并寄出（或提供电子发票）。"
+    },
+    {
+      "id": "case-030",
+      "chapter": "第七章 财务与商务规范",
+      "difficulty": "medium",
+      "question": "销售提成按什么金额计算？",
+      "expected_answer": "提成基数 = 合同实际回款金额，不是合同签约金额；只有实际到账的款项才计算提成，未回款部分不计算。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "提成基数 = 合同实际回款金额（不是合同签约金额）。只有实际到账的款项才计算提成，未回款部分不计算。"
+    },
+    {
+      "id": "case-031",
+      "chapter": "第七章 财务与商务规范",
+      "difficulty": "easy",
+      "question": "新客户首单 SaaS 订阅的提成比例是多少？",
+      "expected_answer": "新客户首单 SaaS 订阅按首年合同额的 8% 计算提成。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "新客户首单（SaaS 订阅）| 首年合同额的 8%"
+    },
+    {
+      "id": "case-032",
+      "chapter": "第七章 财务与商务规范",
+      "difficulty": "medium",
+      "question": "单笔合同提成超过 5000 元会怎么发放？",
+      "expected_answer": "分两次发放：到账时发放 70%，客户验收或服务满 3 个月后发放剩余 30%。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "单笔合同提成超过 5000 元的，分两次发放：到账时发放 70%，客户验收（或服务满 3 个月）后发放剩余 30%。"
+    },
+    {
+      "id": "case-033",
+      "chapter": "第七章 财务与商务规范",
+      "difficulty": "medium",
+      "question": "应收账款逾期 90 到 180 天属于什么等级，如何处理？",
+      "expected_answer": "属于高危类：暂停对该客户的新增服务，法务部介入，发送律师函。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "逾期 90-180 天：高危类，暂停对该客户的新增服务，法务部介入，发送律师函。"
+    },
+    {
+      "id": "case-034",
+      "chapter": "第七章 财务与商务规范",
+      "difficulty": "medium",
+      "question": "客户坚持要先开票后付款，怎么协调？",
+      "expected_answer": "公司默认规则是先付款后开票。确需先开票的，可以在合同中明确约定开票后 X 天内付款，经部门总监审批后可以先开票；但对于新客户或信用状况不明的客户，仍应坚持先付款后开票或要求预付款。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "很多客户有先开票后付款的财务流程。这种情况可以灵活处理：在合同中明确约定开票后 X 天内付款，经部门总监审批后可以先开票。但对于新客户或信用状况不明的客户，仍应坚持先付款后开票，或要求预付款。"
+    },
+    {
+      "id": "case-035",
+      "chapter": "第八章 信息安全与保密制度",
+      "difficulty": "easy",
+      "question": "客户信息属于公司的哪个数据等级？",
+      "expected_answer": "客户信息属于机密级数据，严格控制访问范围，禁止外传，导出需要审批。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "机密：客户信息、合同价格、财务数据、产品路线图、未公开的融资信息。严格控制访问范围，禁止外传，导出需审批。"
+    },
+    {
+      "id": "case-036",
+      "chapter": "第八章 信息安全与保密制度",
+      "difficulty": "medium",
+      "question": "公司对员工密码有什么要求？",
+      "expected_answer": "密码长度不少于 8 位，须包含大小写字母、数字和特殊字符中的至少三种；密码每 90 天必须更换；不同系统不得使用相同密码；不得将密码写在便签上或保存在浏览器自动填充中。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "密码长度不少于 8 位，须包含大小写字母、数字和特殊字符中的至少三种。密码每 90 天必须更换一次。不同系统不得使用相同密码。不得将密码写在便签上贴在电脑旁，不得保存在浏览器的自动填充中。"
+    },
+    {
+      "id": "case-037",
+      "chapter": "第八章 信息安全与保密制度",
+      "difficulty": "easy",
+      "question": "收到自称 IT 部发来的邮件，让我验证邮箱密码，应该怎么办？",
+      "expected_answer": "这是典型的钓鱼邮件，不要点击任何链接或回复，立即将邮件转发给 IT 部安全团队举报。公司 IT 部永远不会通过电话或邮件索要密码和验证码。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "这是典型的钓鱼邮件，不要点击任何链接，不要回复，立即将邮件转发给 IT 部安全团队举报。公司 IT 部永远不会通过邮件要求你验证密码或点击链接。"
+    },
+    {
+      "id": "case-038",
+      "chapter": "第八章 信息安全与保密制度",
+      "difficulty": "easy",
+      "question": "离开工位时最基本的电脑安全习惯是什么？",
+      "expected_answer": "离开座位时立即锁屏，这是最基本也最重要的安全习惯。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "电脑开机密码和屏保密码必须设置，离开座位时立即锁屏（快捷键：Win+L 或 Ctrl+Cmd+Q）。这是最基本也最重要的安全习惯。"
+    },
+    {
+      "id": "case-039",
+      "chapter": "第九章 员工行为规范与职业道德",
+      "difficulty": "easy",
+      "question": "客户过年给我发了一个 2000 元红包，我已经收了怎么办？",
+      "expected_answer": "立即退回，并向直属主管和 HR 说明情况；如果客户坚持不收退回，可以将红包金额上交公司财务部统一处理。2000 元已远超正常商务礼品标准，属于商业贿赂范畴，主动上报并退回一般不会追究责任。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "立即退回，并向直属主管和 HR 说明情况。如果客户坚持不收退回，可以将红包金额上交公司财务部，由公司统一处理。2000 元已经远超正常商务礼品的标准，属于商业贿赂的范畴。主动上报并退回的，公司不会追究你的责任。"
+    },
+    {
+      "id": "case-040",
+      "chapter": "第九章 员工行为规范与职业道德",
+      "difficulty": "easy",
+      "question": "员工接收客户商务礼品的标准是什么？",
+      "expected_answer": "单次价值不超过 200 元的商务礼品可以接收，但须在部门内登记；超过 200 元的礼品须退回或上交公司，无法退回的上交行政部统一处理。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "接收礼品：单次价值不超过 200 元的商务礼品可以接收，但须在部门内登记。超过 200 元的礼品须退回或上交公司。"
+    },
+    {
+      "id": "case-041",
+      "chapter": "第九章 员工行为规范与职业道德",
+      "difficulty": "medium",
+      "question": "同事之间可以谈恋爱吗？",
+      "expected_answer": "可以，但须向 HR 备案，且不得在同一直接汇报关系下，即不能是上下级；如果成为上下级关系，其中一方须调岗。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "同事之间可以谈恋爱，但须向 HR 备案，且不得在同一直接汇报关系下（即不能是上下级）。如成为上下级关系，其中一方须调岗。"
+    },
+    {
+      "id": "case-042",
+      "chapter": "第九章 员工行为规范与职业道德",
+      "difficulty": "medium",
+      "question": "出现利益冲突后应该多久申报？",
+      "expected_answer": "出现利益冲突情形后，须在 10 个工作日内向直属主管和人力资源部书面申报，说明具体情况。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "出现利益冲突情形的，须在 10 个工作日内向直属主管和人力资源部书面申报，说明具体情况。"
+    },
+    {
+      "id": "case-043",
+      "chapter": "第十章 培训发展与晋升通道",
+      "difficulty": "easy",
+      "question": "新员工的试用期一般是多久？",
+      "expected_answer": "试用期一般为 3 个月；劳动合同期限 3 年以上的为 6 个月。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "试用期一般为 3 个月（劳动合同期限 3 年以上的为 6 个月）。"
+    },
+    {
+      "id": "case-044",
+      "chapter": "第十章 培训发展与晋升通道",
+      "difficulty": "easy",
+      "question": "每位员工每年需要完成多少培训学时？",
+      "expected_answer": "每位员工每年须完成不少于 20 学时的培训（含内部和外部），培训学时纳入年度绩效考核。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "每位员工每年须完成不少于 20 学时的培训（含内部和外部），培训学时纳入年度绩效考核。"
+    },
+    {
+      "id": "case-045",
+      "chapter": "第十章 培训发展与晋升通道",
+      "difficulty": "medium",
+      "question": "申请晋升需要满足什么条件？",
+      "expected_answer": "在当前职级任职满 1 年以上，且最近两次绩效评级均为 B 及以上（其中至少一次为 A），方可申请晋升。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "晋升条件：在当前职级任职满 1 年以上，且最近两次绩效评级均为 B 及以上（其中至少一次为 A），方可申请晋升。"
+    },
+    {
+      "id": "case-046",
+      "chapter": "第十章 培训发展与晋升通道",
+      "difficulty": "medium",
+      "question": "我不想带团队，是不是就没有发展空间了？",
+      "expected_answer": "不是。公司实行专业通道和管理通道双通道体系，不想带团队的员工可以走专业通道；P7、P8 在薪酬和地位上与管理通道的 M3、M4 相当。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "公司的双通道体系就是为了让不想带团队的员工也有清晰的发展路径。专业通道的 P7、P8 在薪酬和地位上与管理通道的 M3、M4 相当。"
+    },
+    {
+      "id": "case-047",
+      "chapter": "第十一章 奖惩制度与申诉渠道",
+      "difficulty": "easy",
+      "question": "年度优秀员工的奖励是什么？",
+      "expected_answer": "每年评选一次，全公司约 10% 的员工入选，奖励 10000 元现金 + 荣誉证书 + 优先晋升资格。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "年度优秀员工：每年评选一次，全公司约 10% 的员工入选，奖励 10000 元现金 + 荣誉证书 + 优先晋升资格。"
+    },
+    {
+      "id": "case-048",
+      "chapter": "第十一章 奖惩制度与申诉渠道",
+      "difficulty": "medium",
+      "question": "收到书面警告会有什么影响？",
+      "expected_answer": "书面警告会发放书面警告信，扣发当月绩效奖金的 20%，并记入个人档案。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "书面警告：书面警告信，扣发当月绩效奖金的 20%，记入个人档案。"
+    },
+    {
+      "id": "case-049",
+      "chapter": "第十一章 奖惩制度与申诉渠道",
+      "difficulty": "medium",
+      "question": "对处分决定不服，应该怎么申诉？",
+      "expected_answer": "收到处分决定后 5 个工作日内向直属主管提出书面申诉；主管 3 个工作日内答复；不满意可向部门总监申诉，部门总监 5 个工作日内复核答复；仍不满意可向 HR 或更高层级管理者提出最终申诉，独立调查小组在 10 个工作日内给出最终结论。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "收到处分决定或绩效结果后 5 个工作日内，向直属主管提出书面申诉。直属主管在 3 个工作日内给予答复。向部门总监提出申诉，部门总监在 5 个工作日内组织复核并给予答复。可向 HR 部或更高层级管理者提出最终申诉，独立调查小组在 10 个工作日内给出最终结论。"
+    },
+    {
+      "id": "case-050",
+      "chapter": "第十一章 奖惩制度与申诉渠道",
+      "difficulty": "medium",
+      "question": "季度之星的评选条件是什么？",
+      "expected_answer": "每季度评选一次，每个部门 1-2 名，奖励 2000 元现金 + 荣誉证书；评选标准是季度绩效 S 或 A、在工作中有突出贡献或创新。",
+      "expected_document_titles": ["公司制度培训手册（业务人员版）V1.0.md"],
+      "expected_source_text": "季度之星：每季度评选一次，每个部门 1-2 名，奖励 2000 元现金 + 荣誉证书。评选标准：季度绩效 S 或 A、在工作中有突出贡献或创新。"
+    }
+  ]
+}
