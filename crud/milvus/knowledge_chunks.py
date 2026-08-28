@@ -77,7 +77,7 @@ def insert_knowledge_chunks(
 def hybrid_search_knowledge_chunks(
     query_embedding: list[float],
     query_text: str,
-    top_k: int = 10,
+    top_k: int = 3,
     *,
     vector_limit: int = 10,
     sparse_limit: int = 10,

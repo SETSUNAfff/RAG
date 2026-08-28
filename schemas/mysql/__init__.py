@@ -6,6 +6,13 @@ from schemas.mysql.conversation import (
 )
 from schemas.mysql.document import DocumentCreate, DocumentRead, DocumentUpdate
 from schemas.mysql.enums import DocumentStatus, MessageRole, SourceType
+from schemas.mysql.evaluation import (
+    EvaluationCaseCreate,
+    EvaluationCaseRead,
+    EvaluationCaseUpdate,
+    EvaluationRunRead,
+    EvaluationRunResultRead,
+)
 from schemas.mysql.message import MessageCreate, MessageRead, MessageUpdate
 
 __all__ = [
@@ -19,6 +26,11 @@ __all__ = [
     "DocumentRead",
     "DocumentStatus",
     "DocumentUpdate",
+    "EvaluationCaseCreate",
+    "EvaluationCaseRead",
+    "EvaluationCaseUpdate",
+    "EvaluationRunRead",
+    "EvaluationRunResultRead",
     "MessageCreate",
     "MessageRead",
     "MessageRole",

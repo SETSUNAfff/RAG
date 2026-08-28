@@ -8,7 +8,15 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from models.mysql import Base
-from models.mysql import Chunk, Conversation, Document, Message  # noqa: F401
+from models.mysql import (  # noqa: F401
+    Chunk,
+    Conversation,
+    Document,
+    EvaluationCase,
+    EvaluationRun,
+    EvaluationRunResult,
+    Message,
+)
 
 
 config = context.config
