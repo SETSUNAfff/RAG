@@ -14,9 +14,11 @@ env/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
 dist/
 build/
+.ipynb_checkpoints/
 
 # IDE 与操作系统本地文件
 .idea/
@@ -24,6 +26,7 @@ build/
 *.swp
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # 运行期日志与本地数据
 logs/
@@ -35,3 +38,10 @@ uploads/
 mysql_data/
 milvus_data/
 redis_data/
+
+# 证书与凭证文件
+*.pem
+*.key
+*.crt
+credentials.json
+service-account*.json

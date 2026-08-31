@@ -75,7 +75,7 @@ def extract_text(file_name: str, data: bytes) -> str:
 
 
 # 分割文本
-def split_text(text: str, chunk_size: int = 500, chunk_overlap: int = 0) -> list[str]:
+def split_text(text: str, chunk_size: int = 500, chunk_overlap: int = 80) -> list[str]:
     """把长文本按语义边界切分，供 embedding 和 Milvus 入库使用。"""
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
