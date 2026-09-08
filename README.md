@@ -202,6 +202,3 @@ curl -N http://localhost:8200/api/v1/chat \
 
 评测报告可按困难度（`difficulty`）和章节（`chapter`）聚合查看。
 
-## 设计文档
-
-更完整的架构决策、数据模型与评测方案见 [rag-design.md](rag-design.md)。
