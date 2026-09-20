@@ -1,9 +1,17 @@
-# 密钥与本地环境
+# Local secrets and machine-specific environment files
 .env
-.env.*
+.env.local
+.env.*.local
 !.env.example
 
-# Python 缓存与构建产物
+# JavaScript dependencies and build output
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python caches, virtual environments, and build output
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -16,19 +24,19 @@ env/
 .coverage
 .coverage.*
 htmlcov/
-dist/
 build/
 .ipynb_checkpoints/
 
-# IDE 与操作系统本地文件
+# IDE and operating-system files
 .idea/
 .vscode/
+.zcode/
 *.swp
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# 运行期日志与本地数据
+# Runtime logs and local service data
 logs/
 *.log
 data/
@@ -39,7 +47,7 @@ mysql_data/
 milvus_data/
 redis_data/
 
-# 证书与凭证文件
+# Certificates and credentials
 *.pem
 *.key
 *.crt
